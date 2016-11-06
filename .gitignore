@@ -1,0 +1,8 @@
+build/
+dist/
+.cache
+hitchtrigger.egg-info/
+tests/.hitch
+__pycache__
+*.pyc
+*.kate-swp

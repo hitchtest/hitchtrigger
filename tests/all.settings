@@ -1,0 +1,24 @@
+python_versions:
+  - 3.5.0
+peewee_versions:
+  - 2.8.5
+failfast: true
+pause_on_failure: true
+always run:
+  - import sys
+
+  - |
+    class ExampleException(Exception):
+        pass
+
+  - |
+    def should_run(which):
+        open("should{0}.txt".format(which), "w").write("ran!")
+
+  - |
+    def should_not_run():
+        raise RuntimeError("This shouldn't have happened")
+
+  - |
+    def raise_example_exception():
+        raise ExampleException
