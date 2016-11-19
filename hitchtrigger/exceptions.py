@@ -1,0 +1,2 @@
+class DependentModelNotFound(Exception):
+    pass

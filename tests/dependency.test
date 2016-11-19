@@ -54,5 +54,11 @@
     - Should have run: secondrun-filewatcher
 
     - Should have run: secondrun-dependencywatch
+
+    - Assert exception:
+        command: |
+          with trigmon.watch("anotherwatcy", trigmon.was_run("nonexistent")) as trigger:
+            pass
+        exception: Dependent model 'nonexistent' not found.
 {% endfor %}
 {% endfor %}

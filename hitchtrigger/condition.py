@@ -1,4 +1,5 @@
 from os import path as ospath
+from hitchtrigger import exceptions
 from hitchtrigger import models
 import datetime
 
@@ -163,7 +164,9 @@ class WasRun(Condition):
         dependent_model = models.Watch.filter(name=self._name).first()
 
         if dependent_model is None:
-            raise RuntimeError("Dependent model {0} not found".format(self._name))
+            raise exceptions.DependentModelNotFound(
+                "Dependent model '{0}' not found.".format(self._name)
+            )
 
         if watch_model.last_run is None or dependent_model.last_run is None:
             return YesChange()
