@@ -8,6 +8,7 @@
     - dependency
     - file-watched
     - py{{ python_version }}
+    - peewee{{ peewee_version }}
   scenario:
     - Touch: tomonitor.txt
 

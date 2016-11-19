@@ -1,6 +1,6 @@
 from hitchtrigger import models
 from hitchtrigger.watch import Watch
-from hitchtrigger.condition import Modified, Flag, Nonexistent, NotRunSince, WasRun
+from hitchtrigger.condition import Modified, Var, Nonexistent, NotRunSince, WasRun
 from datetime import timedelta as python_timedelta
 
 
@@ -23,7 +23,7 @@ class Monitor(object):
         Create a condition that triggers when one of the variables
         fed via kwargs has changed.
         """
-        return Flag(self, kwargs)
+        return Var(self, kwargs)
 
     def nonexistent(self, path):
         """

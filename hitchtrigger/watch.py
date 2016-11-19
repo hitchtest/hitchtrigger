@@ -1,6 +1,5 @@
 from hitchtrigger.trigger import Trigger
 from hitchtrigger import models
-from os import path
 import datetime
 
 

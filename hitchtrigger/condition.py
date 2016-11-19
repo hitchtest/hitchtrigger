@@ -2,7 +2,8 @@ from os import path as ospath
 from hitchtrigger import exceptions
 from hitchtrigger import models
 import datetime
-
+import pickle
+import base64
 
 
 class Change(object):
@@ -38,7 +39,7 @@ class FileChange(Change):
         return len(self._new) > 0 or len(self._modified) > 0
 
 
-class FlagChange(Change):
+class VarChange(Change):
     def __init__(self, new, modified):
         self._new = new
         self._modified = modified
@@ -104,29 +105,32 @@ class Modified(Condition):
         return FileChange(new_files, modified_files)
 
 
-class Flag(Condition):
-    def __init__(self, monitor, flags):
+class Var(Condition):
+    def __init__(self, monitor, kwargs):
         self._monitor = monitor
-        self._flags = flags
-        super(Flag, self).__init__()
+        self._vars = kwargs
+        super(Var, self).__init__()
 
     def check(self, watch_model):
-        new_flags = list(self._flags.keys())
-        changed_flags = []
+        new_vars = [str(var) for var in self._vars.keys()]
+        changed_vars = []
 
-        for flag in models.Flag.filter(watch=watch_model):
-            if flag.name in self._flags:
-                new_flags.remove(flag.name)
-                if self._flags[flag.name] != flag.value:
-                    changed_flags.append(flag.name)
-                    flag.value = self._flags[flag.name]
-                    flag.save()
+        for var in models.Var.filter(watch=watch_model):
+            if var.name in self._vars.keys():
+                new_vars.remove(str(var.name))
+                if self._vars[var.name] != pickle.loads(base64.b64decode(var.value)):
+                    changed_vars.append(var.name)
+                    var.value = self._vars[var.name]
+                    var.save()
 
-        for flag in new_flags:
-            flag_model = models.Flag(watch=watch_model, name=flag, value=self._flags[flag])
-            flag_model.save()
+        for var in new_vars:
+            var_model = models.Var(
+                watch=watch_model, name=var,
+                value=base64.b64encode(pickle.dumps(self._vars[var]))
+            )
+            var_model.save()
 
-        return FlagChange(new_flags, changed_flags)
+        return VarChange(new_vars, changed_vars)
 
 
 class Nonexistent(Condition):

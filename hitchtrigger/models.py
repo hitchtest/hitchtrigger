@@ -1,4 +1,5 @@
-from peewee import SqliteDatabase, Model, ForeignKeyField, CharField, FloatField, BooleanField, DateTimeField
+from peewee import SqliteDatabase, Model
+from peewee import ForeignKeyField, CharField, FloatField, BooleanField, DateTimeField, TextField
 
 
 class BaseModel(Model):
@@ -19,10 +20,10 @@ class File(BaseModel):
     last_modified = FloatField()
 
 
-class Flag(BaseModel):
+class Var(BaseModel):
     watch = ForeignKeyField(Watch)
     name = CharField(max_length=256)
-    value = CharField(max_length=256)
+    value = TextField()
 
 
 def use_sqlite_db(sqlite_filename):
@@ -31,11 +32,11 @@ def use_sqlite_db(sqlite_filename):
     BaseModel._meta.database = db
     File._meta.database = db
     Watch._meta.database = db
-    Flag._meta.database = db
+    Var._meta.database = db
 
     if not Watch.table_exists():
         Watch.create_table()
     if not File.table_exists():
         File.create_table()
-    if not Flag.table_exists():
-        Flag.create_table()
+    if not Var.table_exists():
+        Var.create_table()

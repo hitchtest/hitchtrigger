@@ -8,7 +8,7 @@ class Trigger(object):
     def __bool__(self):
         changed = False
         for change in self._changes:
-            change = changed or bool(change) 
+            change = changed or bool(change)
         return change or self._exception_raised
 
     def __nonzero__(self):
