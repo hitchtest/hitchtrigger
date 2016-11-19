@@ -14,22 +14,23 @@
         import hitchtrigger
 
         trigmon = hitchtrigger.Monitor("monitor.sqlite")
+        conditions = trigmon.modified(["tomonitor.txt"])
 
-        with trigmon.watch("filewatch", files=["tomonitor.txt"]) as trigger:
-            if bool(trigger):
+        with trigmon.watch("filewatch", conditions) as trigger:
+            if trigger:
                 should_run("firstrun")
 
     - Should have run: firstrun
 
     - Run command: |
-        with trigmon.watch("filewatch", files=["tomonitor.txt"]) as trigger:
+        with trigmon.watch("filewatch", conditions) as trigger:
             if trigger:
                 should_not_run()
 
     - Touch: tomonitor.txt
 
     - Run command: |
-        with trigmon.watch("filewatch", files=["tomonitor.txt"]) as trigger:
+        with trigmon.watch("filewatch", conditions) as trigger:
             if trigger:
                 should_run("secondrun")
 

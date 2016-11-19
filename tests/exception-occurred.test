@@ -14,9 +14,10 @@
         import hitchtrigger
 
         trigmon = hitchtrigger.Monitor("monitor.sqlite")
+        conditions = trigmon.modified(["tomonitor.txt"])
 
         try:
-            with trigmon.watch("exceptionwatch", files=["tomonitor.txt"]) as trigger:
+            with trigmon.watch("exceptionwatch", conditions) as trigger:
                 if trigger:
                     raise_example_exception()
         except ExampleException:
@@ -25,7 +26,7 @@
     - Should have run: exceptionraised
 
     - Run command: |
-        with trigmon.watch("exceptionwatch", files=["tomonitor.txt"]) as trigger:
+        with trigmon.watch("exceptionwatch", conditions) as trigger:
             if trigger:
                 should_run("secondgo")
 

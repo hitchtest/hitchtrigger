@@ -41,7 +41,7 @@ class ExecutionEngine(hitchtest.ExecutionEngine):
         # Uninstall and reinstall
         run(self.pip("uninstall", "hitchtrigger", "-y").ignore_errors())
         run(self.pip("install", ".").in_dir(self.path.project))
-        
+
         run(self.pip("install", "peewee=={0}".format(self.preconditions['peewee_version'])))
 
         self.services = hitchserve.ServiceBundle(
@@ -109,6 +109,16 @@ class ExecutionEngine(hitchtest.ExecutionEngine):
     def should_have_run(self, which):
         if not self.path.state.joinpath("should{0}.txt".format(which)).exists():
             raise RuntimeError("{0} was not run".format(which))
+
+    def make_directory(self, directory):
+        self.path.state.joinpath(directory).mkdir()
+
+    def sleep(self, howlong):
+        import time
+        time.sleep(float(howlong))
+
+    def sleep_for_over_a_second(self):
+        self.sleep(1.5)
 
     def flake8(self, directory, args=None):
         # Silently install flake8

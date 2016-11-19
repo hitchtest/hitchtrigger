@@ -1,4 +1,4 @@
-from peewee import SqliteDatabase, Model, ForeignKeyField, CharField, FloatField, BooleanField
+from peewee import SqliteDatabase, Model, ForeignKeyField, CharField, FloatField, BooleanField, DateTimeField
 
 
 class BaseModel(Model):
@@ -10,6 +10,7 @@ class BaseModel(Model):
 class Watch(BaseModel):
     name = CharField(primary_key=True)
     exception_raised = BooleanField()
+    last_run = DateTimeField(null=True)
 
 
 class File(BaseModel):
