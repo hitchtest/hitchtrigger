@@ -1,3 +1,4 @@
 * Pickle variables.
 * "Why" variable.
 * Override trigger.
+* Rebuild when structure of the database changes.
