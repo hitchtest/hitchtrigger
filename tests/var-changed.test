@@ -33,5 +33,11 @@
                 should_run("secondrun")
 
     - Should have run: secondrun
+
+    - Assert exception:
+        command: |
+          with trigmon.watch("invalidwatch", trigmon.var(var=open('/tmp/x', 'w'))):
+              pass
+        exception: Can't use non-pickleable objects as vars.
 {% endfor %}
 {% endfor %}

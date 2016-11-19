@@ -1,7 +1,9 @@
 from hitchtrigger import models
 from hitchtrigger.watch import Watch
-from hitchtrigger.condition import Modified, Var, Nonexistent, NotRunSince, WasRun
+from hitchtrigger import condition
+from hitchtrigger import exceptions
 from datetime import timedelta as python_timedelta
+import pickle
 
 
 class Monitor(object):
@@ -16,21 +18,28 @@ class Monitor(object):
         Create a Condition that triggers when a file or directory
         in a list (or other iterable) of paths has changed.
         """
-        return Modified(self, paths)
+        return condition.Modified(self, paths)
 
     def var(self, **kwargs):
         """
         Create a condition that triggers when one of the variables
         fed via kwargs has changed.
         """
-        return Var(self, kwargs)
+        for key, value in kwargs.items():
+            assert type(key) is str
+
+            try:
+                pickle.dumps(value)
+            except TypeError:
+                raise exceptions.VarMustBePickleable("Can't use non-pickleable objects as vars.")
+        return condition.Var(self, kwargs)
 
     def nonexistent(self, path):
         """
         Conditions that triggers when a path (file or directory)
         is found to be non-existent.
         """
-        return Nonexistent(path)
+        return condition.Nonexistent(path)
 
     def not_run_since(self, seconds=0, minutes=0, hours=0, days=0, timedelta=None):
         """
@@ -45,10 +54,10 @@ class Monitor(object):
         td = td + python_timedelta(minutes=minutes)
         td = td + python_timedelta(hours=hours)
         td = td + python_timedelta(days=days)
-        return NotRunSince(self, td)
+        return condition.NotRunSince(self, td)
 
     def was_run(self, name):
         """
         Condition that triggers when a previous block was just triggered.
         """
-        return WasRun(self, name)
+        return condition.WasRun(self, name)
