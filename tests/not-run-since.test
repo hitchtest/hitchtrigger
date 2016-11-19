@@ -8,8 +8,6 @@
     - not-run-since
     - py{{ python_version }}
   scenario:
-    - Touch: tomonitor.txt
-
     - Run command: |
         from datetime import timedelta
         import hitchtrigger
