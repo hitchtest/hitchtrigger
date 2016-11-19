@@ -1,0 +1,58 @@
+{% for peewee_version in peewee_versions %}
+{% for python_version in python_versions %}
+- name: Dependency watch
+  preconditions:
+    python_version: {{ python_version }}
+    peewee_version: {{ peewee_version }}
+  tags:
+    - dependency
+    - file-watched
+    - py{{ python_version }}
+  scenario:
+    - Touch: tomonitor.txt
+
+    - Run command: |
+        import hitchtrigger
+
+        trigmon = hitchtrigger.Monitor("monitor.sqlite")
+        filechanged = trigmon.modified(["tomonitor.txt"])
+        filewatchdependency = trigmon.was_run("filewatch")
+
+        with trigmon.watch("filewatch", filechanged) as trigger:
+            if trigger:
+                should_run("firstrun-filewatcher")
+
+        with trigmon.watch("dependentwatch", filewatchdependency):
+            if trigger:
+                should_run("firstrun-dependencywatch")
+
+    - Should have run: firstrun-filewatcher
+
+    - Should have run: firstrun-dependencywatch
+
+    - Run command: |
+        with trigmon.watch("filewatch", filechanged) as trigger:
+            if trigger:
+                should_not_run()
+
+        with trigmon.watch("dependentwatch", filewatchdependency):
+            if trigger:
+                should_not_run()
+
+    - Touch: tomonitor.txt
+
+    - Run command: |
+        with trigmon.watch("filewatch", filechanged) as trigger:
+            if trigger:
+                should_run("secondrun-filewatcher")
+
+        with trigmon.watch("dependentwatch", filewatchdependency):
+            if trigger:
+                should_run("secondrun-dependencywatch")
+
+
+    - Should have run: secondrun-filewatcher
+
+    - Should have run: secondrun-dependencywatch
+{% endfor %}
+{% endfor %}

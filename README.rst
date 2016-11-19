@@ -30,14 +30,16 @@ Use
     # Will run in the following cases:
     #
     ## The command block has never been run before.
-    ## Var "v=2" is changed (e.g. to "v=2").
-    ## Either requirements.txt or dev_requirements.txt have been modified (file modification dates are monitored).
+    ## An exception was triggered within the context manager on the previous run.
+    ## venv directory is non-existent.
     ## A period of 7 days has elapsed
-    ## The code surrounded by the context manager (with) triggered an exception on the previous run.
+    ## A previous block named 'previousblock' was run.
+    ## Either requirements.txt or dev_requirements.txt have been modified (file modification dates are monitored).
+    ## Var "v=1" is changed (e.g. to "v=2").
 
     with mon.watch(
         "virtualenv",
-        mon.nonexistent("venv") | mon.not_run_since(days=7) |
+        mon.nonexistent("venv") | mon.not_run_since(days=7) | mon.was_run("previousblock")
         mon.modified(["requirements.txt", "dev_requirements.txt"]) | mon.var(v=1)
     ) as trigger:
         if trigger:

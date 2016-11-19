@@ -108,11 +108,11 @@ class Flag(Condition):
         self._monitor = monitor
         self._flags = flags
         super(Flag, self).__init__()
-    
+
     def check(self, watch_model):
         new_flags = list(self._flags.keys())
         changed_flags = []
-        
+
         for flag in models.Flag.filter(watch=watch_model):
             if flag.name in self._flags:
                 new_flags.remove(flag.name)
@@ -120,13 +120,11 @@ class Flag(Condition):
                     changed_flags.append(flag.name)
                     flag.value = self._flags[flag.name]
                     flag.save()
-            #else:
-                #new_flags.app(flag.name)
 
         for flag in new_flags:
             flag_model = models.Flag(watch=watch_model, name=flag, value=self._flags[flag])
             flag_model.save()
-        
+
         return FlagChange(new_flags, changed_flags)
 
 
@@ -134,7 +132,7 @@ class Nonexistent(Condition):
     def __init__(self, path):
         super(Nonexistent, self).__init__()
         self._path = path
-    
+
     def check(self, _):
         return NonexistentChange(self._path)
 
@@ -144,12 +142,33 @@ class NotRunSince(Condition):
         super(NotRunSince, self).__init__()
         self._monitor = monitor
         self._timedelta = timedelta
-    
+
     def check(self, watch_model):
         if watch_model.last_run is None:
             return YesChange()
-        
+
         if watch_model.last_run + self._timedelta < datetime.datetime.now():
             return TimeElapsedChange(watch_model.last_run, self._timedelta)
         else:
             return NoChange()
+
+
+class WasRun(Condition):
+    def __init__(self, monitor, name):
+        super(WasRun, self).__init__()
+        self._monitor = monitor
+        self._name = name
+
+    def check(self, watch_model):
+        dependent_model = models.Watch.filter(name=self._name).first()
+
+        if dependent_model is None:
+            raise RuntimeError("Dependent model {0} not found".format(self._name))
+
+        if watch_model.last_run is None or dependent_model.last_run is None:
+            return YesChange()
+
+        if watch_model.last_run > dependent_model.last_run:
+            return YesChange()
+
+        return NoChange()

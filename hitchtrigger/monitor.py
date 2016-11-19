@@ -1,6 +1,6 @@
 from hitchtrigger import models
 from hitchtrigger.watch import Watch
-from hitchtrigger.condition import Modified, Flag, Nonexistent, NotRunSince
+from hitchtrigger.condition import Modified, Flag, Nonexistent, NotRunSince, WasRun
 from datetime import timedelta as python_timedelta
 
 
@@ -46,3 +46,9 @@ class Monitor(object):
         td = td + python_timedelta(hours=hours)
         td = td + python_timedelta(days=days)
         return NotRunSince(self, td)
+
+    def was_run(self, name):
+        """
+        Condition that triggers when a previous block was just triggered.
+        """
+        return WasRun(self, name)

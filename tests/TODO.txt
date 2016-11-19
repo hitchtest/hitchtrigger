@@ -1,4 +1,3 @@
-* Dependencies
 * Pickle variables.
 * "Why" variable.
 * Override trigger.
