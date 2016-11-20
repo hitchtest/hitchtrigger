@@ -15,11 +15,11 @@
     - Run command: |
         import hitchtrigger
 
-        trigmon = hitchtrigger.Monitor("monitor.sqlite")
-        conditions = trigmon.modified(["tomonitor.txt"])
+        monitor = hitchtrigger.Monitor("projectmonitor.db")
+        fileblock = monitor.block("fileblock", monitor.modified(["tomonitor.txt"]))
 
         try:
-            with trigmon.watch("exceptionwatch", conditions) as trigger:
+            with fileblock.context() as trigger:
                 if trigger:
                     raise_example_exception()
         except ExampleException:
@@ -28,7 +28,7 @@
     - Should have run: exceptionraised
 
     - Run command: |
-        with trigmon.watch("exceptionwatch", conditions) as trigger:
+        with fileblock.context() as trigger:
             if trigger:
                 output(trigger.why)
 

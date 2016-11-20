@@ -16,9 +16,12 @@
     - Run command: |
         import hitchtrigger
 
-        trigmon = hitchtrigger.Monitor("monitor.sqlite")
+        monitor = hitchtrigger.Monitor("projectmonitor.db")
+        varblock = monitor.block(
+            "varblock", monitor.var(v=1) | monitor.var(ver="2.7.10")
+        )
 
-        with trigmon.watch("varwatch", trigmon.var(v=1) | trigmon.var(ver="2.7.10")) as trigger:
+        with varblock.context() as trigger:
             if trigger:
                 output(trigger.why)
 
@@ -29,12 +32,14 @@
           - ver = 2.7.10
 
     - Run command: |
-        with trigmon.watch("varwatch", trigmon.var(v=1) | trigmon.var(ver="2.7.10")) as trigger:
+        with varblock.context() as trigger:
             if trigger:
                 should_not_run()
 
     - Run command: |
-        with trigmon.watch("varwatch", trigmon.var(v=1) | trigmon.var(ver="2.7.11")) as trigger:
+        with monitor.block(
+            "varblock", monitor.var(v=1) | monitor.var(ver="2.7.11")
+        ).context() as trigger:
             if trigger:
                 output(trigger.why)
 
@@ -47,7 +52,7 @@
 
     - Assert exception:
         command: |
-          with trigmon.watch("invalidwatch", trigmon.var(var=open('/tmp/x', 'w'))):
+          with monitor.block("invalidwatch", monitor.var(var=open('/tmp/x', 'w'))):
               pass
         exception: Can't use non-pickleable objects as vars.
 {% endfor %}

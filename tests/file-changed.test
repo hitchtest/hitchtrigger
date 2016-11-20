@@ -15,10 +15,10 @@
     - Run command: |
         import hitchtrigger
 
-        trigmon = hitchtrigger.Monitor("monitor.sqlite")
-        conditions = trigmon.modified(["tomonitor.txt"])
+        monitor = hitchtrigger.Monitor("projectmonitor.db")
+        block = monitor.block("fileblock", monitor.modified(["tomonitor.txt"]))
 
-        with trigmon.watch("filewatch", conditions) as trigger:
+        with block.context() as trigger:
             if trigger:
                 output(trigger.why)
 
@@ -27,14 +27,14 @@
           - tomonitor.txt
 
     - Run command: |
-        with trigmon.watch("filewatch", conditions) as trigger:
+        with block.context() as trigger:
             if trigger:
                 should_not_run()
 
     - Touch: tomonitor.txt
 
     - Run command: |
-        with trigmon.watch("filewatch", conditions) as trigger:
+        with block.context() as trigger:
             if trigger:
                 output(trigger.why)
 

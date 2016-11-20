@@ -15,17 +15,22 @@
     - Run command: |
         import hitchtrigger
 
-        trigmon = hitchtrigger.Monitor("monitor.sqlite")
+        monitor = hitchtrigger.Monitor("projectmonitor.db")
+        nonexistenceblock = monitor.block(
+            "nonexistenceblock",
+            monitor.nonexistent("newdirectory")
+        )
 
-        with trigmon.watch("nonexistence", trigmon.nonexistent("newdirectory")) as trigger:
+        with nonexistenceblock.context() as trigger:
             if trigger:
                 should_run("firstrun")
 
     - Should have run: firstrun
+
     - Make directory: newdirectory
 
     - Run command: |
-        with trigmon.watch("nonexistence", trigmon.nonexistent("newdirectory")) as trigger:
+        with nonexistenceblock.context() as trigger:
             if trigger:
                 should_not_run()
 

@@ -14,24 +14,26 @@
         from datetime import timedelta
         import hitchtrigger
 
-        trigmon = hitchtrigger.Monitor("monitor.sqlite")
-        conditions = trigmon.not_run_since(seconds=1)
+        monitor = hitchtrigger.Monitor("projectmonitor.db")
+        notrunsinceblock = monitor.block(
+            "notrunsinceblock", monitor.not_run_since(seconds=1)
+        )
 
-        with trigmon.watch("timewatch", conditions) as trigger:
+        with notrunsinceblock.context() as trigger:
             if trigger:
                 output(trigger.why)
 
     - Output is: Never run
 
     - Run command: |
-        with trigmon.watch("timewatch", conditions) as trigger:
+        with notrunsinceblock.context() as trigger:
             if trigger:
                 should_not_run()
 
     - Sleep for over a second
 
     - Run command: |
-        with trigmon.watch("timewatch", conditions) as trigger:
+        with notrunsinceblock.context() as trigger:
             if trigger:
                 output(trigger.why)
 
@@ -40,7 +42,9 @@
     - Sleep for over a second
 
     - Run command: |
-        with trigmon.watch("timewatch", trigmon.not_run_since(timedelta=timedelta(seconds=1))) as trigger:
+        with monitor.block(
+            "notrunsinceblock", monitor.not_run_since(timedelta=timedelta(seconds=1))
+        ).context() as trigger:
             if trigger:
                 output(trigger.why)
 

@@ -1,7 +1,8 @@
 HitchTrigger
 ============
 
-HitchTrigger is a self contained build tool designed to trigger blocks of build commands when various conditions are met.
+HitchTrigger is a self contained build tool designed to trigger blocks of build commands when a condition is met
+that necessitates a rebuild.
 
 The conditions can be one or more combined of any of the following:
 
@@ -9,7 +10,7 @@ The conditions can be one or more combined of any of the following:
 * A specified (build) directory did not exist.
 * A period of time has elapsed.
 * A 'watched' variable has changed its value.
-* An exception occurred the previous time the commands were run.
+* An exception occurred the previous time the commands were run (always by default).
 
 To install from pypi::
 
@@ -23,9 +24,7 @@ Use
 
     import hitchtrigger
 
-    mon = hitchtrigger.Monitor(
-        "/path/to/monitor.sqlite",
-    )
+    monitor = hitchtrigger.Monitor("/path/to/project.watch")
 
     # Will run in the following cases:
     #
@@ -37,11 +36,11 @@ Use
     ## Either requirements.txt or dev_requirements.txt have been modified (file modification dates are monitored).
     ## Var "v=1" is changed (e.g. to "v=2").
 
-    with mon.watch(
+    with monitor.block(
         "virtualenv",
-        mon.nonexistent("venv") | mon.not_run_since(days=7) | mon.was_run("previousblock")
-        mon.modified(["requirements.txt", "dev_requirements.txt"]) | mon.var(v=1)
-    ) as trigger:
+        monitor.nonexistent("venv") | monitor.not_run_since(days=7) | monitor.was_run("previousblock")
+        monitor.modified(["requirements.txt", "dev_requirements.txt"]) | monitor.var(v=1)
+    ).context() as trigger:
         if trigger:
             print(trigger.why)  # Prints out reason for running
 

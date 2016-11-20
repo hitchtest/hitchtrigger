@@ -78,7 +78,7 @@ class ExecutionEngine(hitchtest.ExecutionEngine):
 
     def shell(self):
         if hasattr(self, 'services'):
-            self.run_command("from hitchtrigger import *")
+            #self.run_command("from hitchtrigger import *")
             self.services.start_interactive_mode()
             import sys
             import time ; time.sleep(0.5)

@@ -17,11 +17,11 @@
     - Run command: |
         import hitchtrigger
 
-        trigmon = hitchtrigger.Monitor("monitor.sqlite")
-        filechanged = trigmon.modified(["tomonitor.txt"])
-        filewatchdependency = trigmon.was_run("filewatch")
+        monitor = hitchtrigger.Monitor("projectmonitor.db")
+        fileblock = monitor.block("fileblock", monitor.modified(["tomonitor.txt"]))
+        dependblock = monitor.block("dependblock", monitor.was_run("fileblock"))
 
-        with trigmon.watch("filewatch", filechanged) as trigger:
+        with fileblock.context() as trigger:
             if trigger:
                 output(trigger.why)
 
@@ -30,26 +30,26 @@
           - tomonitor.txt
 
     - Run Command: |
-        with trigmon.watch("dependentwatch", filewatchdependency) as trigger:
+        with dependblock.context() as trigger:
             if trigger:
                 output(trigger.why)
 
     - Output is: |
-        Dependent watch 'filewatch' was triggered.
+        Dependent watch 'fileblock' was triggered.
 
     - Run command: |
-        with trigmon.watch("filewatch", filechanged) as trigger:
+        with fileblock.context() as trigger:
             if trigger:
                 should_not_run()
 
-        with trigmon.watch("dependentwatch", filewatchdependency) as trigger:
+        with dependblock.context()  as trigger:
             if trigger:
                 should_not_run()
 
     - Touch: tomonitor.txt
 
     - Run command: |
-        with trigmon.watch("filewatch", filechanged) as trigger:
+        with fileblock.context() as trigger:
             if trigger:
                 output(trigger.why)
 
@@ -58,16 +58,16 @@
           - tomonitor.txt
 
     - Run command: |
-        with trigmon.watch("dependentwatch", filewatchdependency) as trigger:
+        with dependblock.context()  as trigger:
             if trigger:
                 output(trigger.why)
 
     - Output is: |
-        Dependent watch 'filewatch' was triggered.
+        Dependent watch 'fileblock' was triggered.
 
     - Assert exception:
         command: |
-          with trigmon.watch("anotherwatch", trigmon.was_run("nonexistent")) as trigger:
+          with monitor.block("anotherblock", monitor.was_run("nonexistent")).context() as trigger:
             pass
         exception: Dependent model 'nonexistent' not found.
 {% endfor %}

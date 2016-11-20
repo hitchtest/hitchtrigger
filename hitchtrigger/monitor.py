@@ -1,5 +1,5 @@
 from hitchtrigger import models
-from hitchtrigger.watch import Watch
+from hitchtrigger.watch import Block
 from hitchtrigger import condition
 from hitchtrigger import exceptions
 from datetime import timedelta as python_timedelta
@@ -10,8 +10,8 @@ class Monitor(object):
     def __init__(self, sqlite_filename):
         models.use_sqlite_db(sqlite_filename)
 
-    def watch(self, blockname, condition):
-        return Watch(blockname, condition)
+    def block(self, name, condition):
+        return Block(name, condition)
 
     def modified(self, paths):
         """
