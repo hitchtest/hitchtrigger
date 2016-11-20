@@ -1,5 +1,5 @@
 from hitchtrigger import models
-from hitchtrigger.watch import Block
+from hitchtrigger.block import Block
 from hitchtrigger import condition
 from hitchtrigger import exceptions
 from datetime import timedelta as python_timedelta
