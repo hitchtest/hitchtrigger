@@ -37,6 +37,7 @@ PyYAML==3.11
 pyzmq==16.0.0
 q==2.6
 requests==2.9.1
+simex==0.3.1
 simplegeneric==0.8.1
 six==1.10.0
 tblib==1.2.0

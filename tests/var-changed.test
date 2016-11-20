@@ -1,9 +1,11 @@
 {% for peewee_version in peewee_versions %}
 {% for python_version in python_versions %}
+{% for humanize_version in humanize_versions %}
 - name: Var changed
   preconditions:
     python_version: {{ python_version }}
     peewee_version: {{ peewee_version }}
+    humanize_version: {{ humanize_version }}
   tags:
     - var-changed
     - py{{ python_version }}
@@ -17,10 +19,14 @@
         trigmon = hitchtrigger.Monitor("monitor.sqlite")
 
         with trigmon.watch("varwatch", trigmon.var(v=1) | trigmon.var(ver="2.7.10")) as trigger:
-            if bool(trigger):
-                should_run("firstrun")
+            if trigger:
+                output(trigger.why)
 
-    - Should have run: firstrun
+    - Output is: |
+        New monitored var(s) detected:
+          - v = 1
+        New monitored var(s) detected:
+          - ver = 2.7.10
 
     - Run command: |
         with trigmon.watch("varwatch", trigmon.var(v=1) | trigmon.var(ver="2.7.10")) as trigger:
@@ -30,14 +36,20 @@
     - Run command: |
         with trigmon.watch("varwatch", trigmon.var(v=1) | trigmon.var(ver="2.7.11")) as trigger:
             if trigger:
-                should_run("secondrun")
+                output(trigger.why)
 
-    - Should have run: secondrun
+    - Output is: |
+        Modified monitored var(s) detected:
+          - ver was:
+              2.7.10
+            is now
+              2.7.11
 
     - Assert exception:
         command: |
           with trigmon.watch("invalidwatch", trigmon.var(var=open('/tmp/x', 'w'))):
               pass
         exception: Can't use non-pickleable objects as vars.
+{% endfor %}
 {% endfor %}
 {% endfor %}

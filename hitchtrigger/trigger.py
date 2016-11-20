@@ -13,3 +13,15 @@ class Trigger(object):
 
     def __nonzero__(self):
         return self.__bool__()
+
+    @property
+    def why(self):
+        contents = ""
+
+        for change in self._changes:
+            contents = contents + change.why
+
+        if self._exception_raised:
+            contents += "Exception occurred on last run.\n"
+
+        return contents

@@ -1,6 +1,7 @@
 from subprocess import check_call, call, PIPE, CalledProcessError
 from os import path, system, chdir
 from commandlib import run, CommandError
+from simex import DefaultSimex
 import hitchpython
 import hitchserve
 import hitchtest
@@ -43,6 +44,7 @@ class ExecutionEngine(hitchtest.ExecutionEngine):
         run(self.pip("install", ".").in_dir(self.path.project))
 
         run(self.pip("install", "peewee=={0}".format(self.preconditions['peewee_version'])))
+        run(self.pip("install", "humanize=={0}".format(self.preconditions['humanize_version'])))
 
         self.services = hitchserve.ServiceBundle(
             str(self.path.project),
@@ -68,10 +70,11 @@ class ExecutionEngine(hitchtest.ExecutionEngine):
             self.run_command(line)
 
     def on_failure(self):
-        if self.settings.get("pause_on_failure", True):
-            if self.preconditions.get("launch_shell", True):
-                self.services.log(message=self.stacktrace.to_template())
-                self.shell()
+        if hasattr(self, 'services'):
+            if self.settings.get("pause_on_failure", True):
+                if self.preconditions.get("launch_shell", True):
+                    self.services.log(message=self.stacktrace.to_template())
+                    self.shell()
 
     def shell(self):
         if hasattr(self, 'services'):
@@ -109,6 +112,19 @@ class ExecutionEngine(hitchtest.ExecutionEngine):
     def should_have_run(self, which):
         if not self.path.state.joinpath("should{0}.txt".format(which)).exists():
             raise RuntimeError("{0} was not run".format(which))
+
+    def output_is(self, expected_contents):
+        output_contents = self.path.state.joinpath("output.txt").bytes().decode('utf8').strip()
+        regex = DefaultSimex(
+            open_delimeter="(((",
+            close_delimeter=")))"
+        ).compile(expected_contents.strip())
+        if regex.match(output_contents) is   None:
+            raise RuntimeError("Expected output:\n{0}\n\nActual output:\n{1}".format(
+                expected_contents,
+                output_contents,
+            ))
+        self.path.state.joinpath("output.txt").remove()
 
     def make_directory(self, directory):
         self.path.state.joinpath(directory).mkdir()

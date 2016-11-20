@@ -16,7 +16,12 @@ class Watch(object):
         self._condition = condition
 
         if models.Watch.filter(name=blockname).first() is None:
-            self.watch_model = models.Watch(name=blockname, exception_raised=False, last_run=None)
+            self.watch_model = models.Watch(
+                name=blockname,
+                exception_raised=False,
+                last_run=None,
+                was_triggered_on_last_run=None
+            )
             self.watch_model.save(force_insert=True)
         else:
             self.watch_model = models.Watch.filter(name=blockname).first()
@@ -26,7 +31,11 @@ class Watch(object):
         for condition in self._condition.all_conditions():
             change = condition.check(self.watch_model)
             changes.append(change)
-        return Trigger(changes, self.watch_model.exception_raised)
+        trigger = Trigger(changes, self.watch_model.exception_raised)
+
+        self.watch_model.was_triggered_on_last_run = bool(trigger)
+        self.watch_model.save()
+        return trigger
 
     def __exit__(self, type, value, traceback):
         self.watch_model.last_run = datetime.datetime.now()

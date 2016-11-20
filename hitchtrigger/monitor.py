@@ -36,15 +36,19 @@ class Monitor(object):
 
     def nonexistent(self, path):
         """
-        Conditions that triggers when a path (file or directory)
+        Returns conditions that triggers when a path (file or directory)
         is found to be non-existent.
         """
         return condition.Nonexistent(path)
 
     def not_run_since(self, seconds=0, minutes=0, hours=0, days=0, timedelta=None):
         """
-        Condition that triggers when a period of time has elapsed since
+        Returns condition that triggers when a period of time has elapsed since
         last run.
+
+        All parameters are added together.
+        - seconds, minutes, hours days are integers
+        - timedelta is a python timedelta object
         """
         td = python_timedelta()
         if timedelta is not None:

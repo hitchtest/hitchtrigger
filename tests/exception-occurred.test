@@ -1,9 +1,11 @@
 {% for peewee_version in peewee_versions %}
 {% for python_version in python_versions %}
+{% for humanize_version in humanize_versions %}
 - name: Exception occurred
   preconditions:
     python_version: {{ python_version }}
     peewee_version: {{ peewee_version }}
+    humanize_version: {{ humanize_version }}
   tags:
     - exception-occurred
     - py{{ python_version }}
@@ -28,8 +30,10 @@
     - Run command: |
         with trigmon.watch("exceptionwatch", conditions) as trigger:
             if trigger:
-                should_run("secondgo")
+                output(trigger.why)
 
-    - Should have run: secondgo
+    - Output is: |
+        Exception occurred on last run.
+{% endfor %}
 {% endfor %}
 {% endfor %}

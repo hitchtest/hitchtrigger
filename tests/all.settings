@@ -2,6 +2,8 @@ python_versions:
   - 3.5.0
 peewee_versions:
   - 2.8.5
+humanize_versions:
+  - 0.5.1
 failfast: true
 pause_on_failure: true
 always run:
@@ -13,7 +15,8 @@ always run:
 
   - |
     def should_run(which):
-        open("should{0}.txt".format(which), "w").write("ran!")
+        with open("should{0}.txt".format(which), "w") as handle:
+            handle.write("ran!")
 
   - |
     def should_not_run():
@@ -22,3 +25,8 @@ always run:
   - |
     def raise_example_exception():
         raise ExampleException
+
+  - |
+    def output(contents):
+        with open("output.txt", 'w') as handle:
+            handle.write(contents)

@@ -12,6 +12,7 @@ class Watch(BaseModel):
     name = CharField(primary_key=True)
     exception_raised = BooleanField()
     last_run = DateTimeField(null=True)
+    was_triggered_on_last_run = BooleanField(null=True)
 
 
 class File(BaseModel):

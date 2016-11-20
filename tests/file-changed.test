@@ -1,9 +1,11 @@
 {% for peewee_version in peewee_versions %}
 {% for python_version in python_versions %}
+{% for humanize_version in humanize_versions %}
 - name: File changed
   preconditions:
     python_version: {{ python_version }}
     peewee_version: {{ peewee_version }}
+    humanize_version: {{ humanize_version }}
   tags:
     - file-changed
     - py{{ python_version }}
@@ -18,9 +20,11 @@
 
         with trigmon.watch("filewatch", conditions) as trigger:
             if trigger:
-                should_run("firstrun")
+                output(trigger.why)
 
-    - Should have run: firstrun
+    - Output is: |
+        New file(s) / director(ies) detected:
+          - tomonitor.txt
 
     - Run command: |
         with trigmon.watch("filewatch", conditions) as trigger:
@@ -32,8 +36,11 @@
     - Run command: |
         with trigmon.watch("filewatch", conditions) as trigger:
             if trigger:
-                should_run("secondrun")
+                output(trigger.why)
 
-    - Should have run: secondrun
+    - Output is: |
+        File(s) / director(ies) changed:
+          - tomonitor.txt
+{% endfor %}
 {% endfor %}
 {% endfor %}

@@ -1,9 +1,11 @@
 {% for peewee_version in peewee_versions %}
 {% for python_version in python_versions %}
+{% for humanize_version in humanize_versions %}
 - name: Not run since
   preconditions:
     python_version: {{ python_version }}
     peewee_version: {{ peewee_version }}
+    humanize_version: {{ humanize_version }}
   tags:
     - not-run-since
     - py{{ python_version }}
@@ -17,9 +19,9 @@
 
         with trigmon.watch("timewatch", conditions) as trigger:
             if trigger:
-                should_run("firstrun")
+                output(trigger.why)
 
-    - Should have run: firstrun
+    - Output is: Never run
 
     - Run command: |
         with trigmon.watch("timewatch", conditions) as trigger:
@@ -31,17 +33,18 @@
     - Run command: |
         with trigmon.watch("timewatch", conditions) as trigger:
             if trigger:
-                should_run("secondrun")
+                output(trigger.why)
 
-    - Should have run: secondrun
+    - Output is: Should run every time a second elapses and a second elapsed.
 
     - Sleep for over a second
 
     - Run command: |
         with trigmon.watch("timewatch", trigmon.not_run_since(timedelta=timedelta(seconds=1))) as trigger:
             if trigger:
-                should_run("thirdrun")
+                output(trigger.why)
 
-    - Should have run: thirdrun
+    - Output is: Should run every time a second elapses and a second elapsed.
+{% endfor %}
 {% endfor %}
 {% endfor %}

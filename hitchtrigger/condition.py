@@ -2,8 +2,10 @@ from os import path as ospath
 from hitchtrigger import exceptions
 from hitchtrigger import models
 import datetime
+import humanize
 import pickle
 import base64
+import copy
 
 
 class Change(object):
@@ -17,14 +19,40 @@ class NoChange(Change):
 
 
 class YesChange(Change):
+    def __init__(self, message):
+        self._message = message
+
+    @property
+    def why(self):
+        return self._message
+
     def __bool__(self):
         return True
 
 
 class TimeElapsedChange(Change):
-    def __init__(self, since, duration):
-        self._since = since
+    def __init__(self, last_run, duration):
+        self._last_run = last_run
         self._duration = duration
+
+    @property
+    def why(self):
+        return "Should run every time {0} elapses and {1} elapsed.".format(
+            humanize.naturaldelta(self._duration),
+            humanize.naturaldelta(datetime.datetime.now() - self._last_run),
+        )
+
+    def __bool__(self):
+        return True
+
+
+class DependentWatchChange(Change):
+    def __init__(self, name):
+        self._name = name
+
+    @property
+    def why(self):
+        return "Dependent watch '{0}' was triggered.".format(self._name)
 
     def __bool__(self):
         return True
@@ -35,14 +63,43 @@ class FileChange(Change):
         self._new = new
         self._modified = modified
 
+    @property
+    def why(self):
+        contents = ""
+        if len(self._new) > 0:
+            contents += "New file(s) / director(ies) detected:\n"
+            for new in self._new:
+                contents += "  - {0}\n".format(new)
+        if len(self._modified) > 0:
+            contents += "File(s) / director(ies) changed:\n"
+            for modified in self._modified:
+                contents += "  - {0}\n".format(modified)
+        return contents
+
     def __bool__(self):
         return len(self._new) > 0 or len(self._modified) > 0
 
 
 class VarChange(Change):
-    def __init__(self, new, modified):
+    def __init__(self, new, modified, original):
         self._new = new
         self._modified = modified
+        self._original = original
+
+    @property
+    def why(self):
+        contents = ""
+        if len(self._new) > 0:
+            contents += "New monitored var(s) detected:\n"
+            for name, value in self._new.items():
+                contents += "  - {0} = {1}\n".format(name, value)
+        if len(self._modified) > 0:
+            contents += "Modified monitored var(s) detected:\n"
+            for name, value in self._modified.items():
+                contents += "  - {0} was:\n      {1}\n    is now\n      {2}\n".format(
+                    name, self._original[name], value
+                )
+        return contents
 
     def __bool__(self):
         return len(self._new) > 0 or len(self._modified) > 0
@@ -112,25 +169,27 @@ class Var(Condition):
         super(Var, self).__init__()
 
     def check(self, watch_model):
-        new_vars = [str(var) for var in self._vars.keys()]
-        changed_vars = []
+        new_vars = copy.copy(self._vars)
+        changed_vars = {}
+        original_vars = {}
 
         for var in models.Var.filter(watch=watch_model):
             if var.name in self._vars.keys():
-                new_vars.remove(str(var.name))
+                del new_vars[var.name]
                 if self._vars[var.name] != pickle.loads(base64.b64decode(var.value)):
-                    changed_vars.append(var.name)
+                    changed_vars[var.name] = self._vars[var.name]
+                    original_vars[var.name] = pickle.loads(base64.b64decode(var.value))
                     var.value = self._vars[var.name]
                     var.save()
 
-        for var in new_vars:
+        for var, value in new_vars.items():
             var_model = models.Var(
                 watch=watch_model, name=var,
                 value=base64.b64encode(pickle.dumps(self._vars[var]))
             )
             var_model.save()
 
-        return VarChange(new_vars, changed_vars)
+        return VarChange(new_vars, changed_vars, original_vars)
 
 
 class Nonexistent(Condition):
@@ -150,7 +209,7 @@ class NotRunSince(Condition):
 
     def check(self, watch_model):
         if watch_model.last_run is None:
-            return YesChange()
+            return YesChange("Never run.")
 
         if watch_model.last_run + self._timedelta < datetime.datetime.now():
             return TimeElapsedChange(watch_model.last_run, self._timedelta)
@@ -172,10 +231,9 @@ class WasRun(Condition):
                 "Dependent model '{0}' not found.".format(self._name)
             )
 
-        if watch_model.last_run is None or dependent_model.last_run is None:
-            return YesChange()
+        was_triggered = dependent_model.was_triggered_on_last_run
 
-        if watch_model.last_run > dependent_model.last_run:
-            return YesChange()
-
-        return NoChange()
+        if was_triggered is None or was_triggered is True:
+            return DependentWatchChange(self._name)
+        else:
+            return NoChange()

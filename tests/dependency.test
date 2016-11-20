@@ -1,9 +1,11 @@
 {% for peewee_version in peewee_versions %}
 {% for python_version in python_versions %}
+{% for humanize_version in humanize_versions %}
 - name: Dependency watch
   preconditions:
     python_version: {{ python_version }}
     peewee_version: {{ peewee_version }}
+    humanize_version: {{ humanize_version }}
   tags:
     - dependency
     - file-watched
@@ -21,22 +23,26 @@
 
         with trigmon.watch("filewatch", filechanged) as trigger:
             if trigger:
-                should_run("firstrun-filewatcher")
+                output(trigger.why)
 
-        with trigmon.watch("dependentwatch", filewatchdependency):
+    - Output is: |
+        New file(s) / director(ies) detected:
+          - tomonitor.txt
+
+    - Run Command: |
+        with trigmon.watch("dependentwatch", filewatchdependency) as trigger:
             if trigger:
-                should_run("firstrun-dependencywatch")
+                output(trigger.why)
 
-    - Should have run: firstrun-filewatcher
-
-    - Should have run: firstrun-dependencywatch
+    - Output is: |
+        Dependent watch 'filewatch' was triggered.
 
     - Run command: |
         with trigmon.watch("filewatch", filechanged) as trigger:
             if trigger:
                 should_not_run()
 
-        with trigmon.watch("dependentwatch", filewatchdependency):
+        with trigmon.watch("dependentwatch", filewatchdependency) as trigger:
             if trigger:
                 should_not_run()
 
@@ -45,21 +51,25 @@
     - Run command: |
         with trigmon.watch("filewatch", filechanged) as trigger:
             if trigger:
-                should_run("secondrun-filewatcher")
+                output(trigger.why)
 
-        with trigmon.watch("dependentwatch", filewatchdependency):
+    - Output is: |
+        File(s) / director(ies) changed:
+          - tomonitor.txt
+
+    - Run command: |
+        with trigmon.watch("dependentwatch", filewatchdependency) as trigger:
             if trigger:
-                should_run("secondrun-dependencywatch")
+                output(trigger.why)
 
-
-    - Should have run: secondrun-filewatcher
-
-    - Should have run: secondrun-dependencywatch
+    - Output is: |
+        Dependent watch 'filewatch' was triggered.
 
     - Assert exception:
         command: |
-          with trigmon.watch("anotherwatcy", trigmon.was_run("nonexistent")) as trigger:
+          with trigmon.watch("anotherwatch", trigmon.was_run("nonexistent")) as trigger:
             pass
         exception: Dependent model 'nonexistent' not found.
+{% endfor %}
 {% endfor %}
 {% endfor %}
