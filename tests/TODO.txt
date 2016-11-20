@@ -1,2 +1,3 @@
+* Make object that creates the context handle.
 * Override trigger.
 * Rebuild when structure of the database changes.
