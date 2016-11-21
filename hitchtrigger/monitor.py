@@ -1,17 +1,48 @@
-from hitchtrigger import models
+from peewee import ForeignKeyField, CharField, FloatField, BooleanField, DateTimeField, TextField
+from peewee import SqliteDatabase, Model
+from datetime import timedelta as python_timedelta
 from hitchtrigger.block import Block
 from hitchtrigger import condition
 from hitchtrigger import exceptions
-from datetime import timedelta as python_timedelta
 import pickle
 
 
 class Monitor(object):
     def __init__(self, sqlite_filename):
-        models.use_sqlite_db(sqlite_filename)
+        class BaseModel(Model):
+            class Meta:
+                database = SqliteDatabase(sqlite_filename)
+
+        class Watch(BaseModel):
+            name = CharField(primary_key=True)
+            exception_raised = BooleanField()
+            last_run = DateTimeField(null=True)
+            was_triggered_on_last_run = BooleanField(null=True)
+
+        class File(BaseModel):
+            watch = ForeignKeyField(Watch)
+            filename = CharField(max_length=640)
+            last_modified = FloatField()
+
+        class Var(BaseModel):
+            watch = ForeignKeyField(Watch)
+            name = CharField(max_length=256)
+            value = TextField()
+
+        if not Watch.table_exists():
+            Watch.create_table()
+        if not File.table_exists():
+            File.create_table()
+        if not Var.table_exists():
+            Var.create_table()
+
+        self.BaseModel = BaseModel
+        self.File = File
+        self.Watch = Watch
+        self.Var = Var
 
     def block(self, name, condition):
-        return Block(name, condition)
+        return Block(self, name, condition)
 
     def modified(self, paths):
         """

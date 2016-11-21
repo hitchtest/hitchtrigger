@@ -1,6 +1,5 @@
 from os import path as ospath
 from hitchtrigger import exceptions
-from hitchtrigger import models
 import datetime
 import humanize
 import pickle
@@ -141,7 +140,7 @@ class Modified(Condition):
         new_files = list(self._paths)
         modified_files = []
 
-        for monitored_file in models.File.filter(watch=watch_model):
+        for monitored_file in self._monitor.File.filter(watch=watch_model):
             filename = monitored_file.filename
             if filename in self._paths:
                 new_files.remove(filename)
@@ -152,7 +151,7 @@ class Modified(Condition):
                     monitored_file.save()
 
         for filename in new_files:
-            file_model = models.File(
+            file_model = self._monitor.File(
                 watch=watch_model,
                 filename=filename,
                 last_modified=ospath.getmtime(filename),
@@ -173,7 +172,7 @@ class Var(Condition):
         changed_vars = {}
         original_vars = {}
 
-        for var in models.Var.filter(watch=watch_model):
+        for var in self._monitor.Var.filter(watch=watch_model):
             if var.name in self._vars.keys():
                 del new_vars[var.name]
                 if self._vars[var.name] != pickle.loads(base64.b64decode(var.value)):
@@ -183,7 +182,7 @@ class Var(Condition):
                     var.save()
 
         for var, value in new_vars.items():
-            var_model = models.Var(
+            var_model = self._monitor.Var(
                 watch=watch_model, name=var,
                 value=base64.b64encode(pickle.dumps(self._vars[var]))
             )
@@ -224,7 +223,7 @@ class WasRun(Condition):
         self._name = name
 
     def check(self, watch_model):
-        dependent_model = models.Watch.filter(name=self._name).first()
+        dependent_model = self._monitor.Watch.filter(name=self._name).first()
 
         if dependent_model is None:
             raise exceptions.DependentModelNotFound(

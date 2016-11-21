@@ -1,5 +1,4 @@
 from hitchtrigger.trigger import Trigger
-from hitchtrigger import models
 import datetime
 
 
@@ -39,12 +38,13 @@ class HitchTriggerBlockContextManager(object):
 
 
 class Block(object):
-    def __init__(self, blockname, condition):
+    def __init__(self, monitor, blockname, condition):
+        self._monitor = monitor
         self._blockname = blockname
         self._condition = condition
 
-        if models.Watch.filter(name=blockname).first() is None:
-            self.watch_model = models.Watch(
+        if self._monitor.Watch.filter(name=blockname).first() is None:
+            self.watch_model = self._monitor.Watch(
                 name=blockname,
                 exception_raised=False,
                 last_run=None,
@@ -52,7 +52,7 @@ class Block(object):
             )
             self.watch_model.save(force_insert=True)
         else:
-            self.watch_model = models.Watch.filter(name=blockname).first()
+            self.watch_model = self._monitor.Watch.filter(name=blockname).first()
 
     def context(self):
         return HitchTriggerBlockContextManager(self)
