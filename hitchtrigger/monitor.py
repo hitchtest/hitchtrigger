@@ -8,7 +8,10 @@ import pickle
 
 
 class Monitor(object):
-    def __init__(self, sqlite_filename):
+    def __init__(self, sqlite_filename, override=None):
+        self._override = override if override is not None else []
+        assert hasattr(self._override, '__iter__')
+
         class BaseModel(Model):
             class Meta:
                 database = SqliteDatabase(sqlite_filename)

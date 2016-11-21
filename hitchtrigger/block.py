@@ -15,7 +15,7 @@ class HitchTriggerBlockContextManager(object):
         for condition in self._block._condition.all_conditions():
             change = condition.check(self.model)
             changes.append(change)
-        trigger = Trigger(changes, self.model.exception_raised)
+        trigger = Trigger(changes, self.model.exception_raised, self._block.override)
 
         self.model.was_triggered_on_last_run = bool(trigger)
         self.model.save()
@@ -53,6 +53,10 @@ class Block(object):
             self.watch_model.save(force_insert=True)
         else:
             self.watch_model = self._monitor.Watch.filter(name=blockname).first()
+
+    @property
+    def override(self):
+        return self._blockname in self._monitor._override
 
     def context(self):
         return HitchTriggerBlockContextManager(self)

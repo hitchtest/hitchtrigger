@@ -24,7 +24,10 @@ Use
 
     import hitchtrigger
 
-    monitor = hitchtrigger.Monitor("/path/to/project.watch")
+    monitor = hitchtrigger.Monitor(
+        "/path/to/project.watch"
+        #override=["virtualenv", ],
+    )
 
     # Will run in the following cases:
     #
@@ -35,6 +38,7 @@ Use
     ## A previous block named 'previousblock' was run.
     ## Either requirements.txt or dev_requirements.txt have been modified (file modification dates are monitored).
     ## Var "v=1" is changed (e.g. to "v=2").
+    ## The line 'override=["virtualenv", ]' is uncommented.
 
     with monitor.block(
         "virtualenv",
